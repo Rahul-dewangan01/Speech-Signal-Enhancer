@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Speech Signal Enhancement – Complete Guide</title>
+<style>
+  :root {
+    --bg: #0d1117; --bg2: #161b22; --bg3: #21262d;
+    --border: #30363d; --accent: #58a6ff; --accent2: #3fb950;
+    --accent3: #f78166; --accent4: #d2a8ff; --accent5: #ffa657;
+    --text: #c9d1d9; --text2: #8b949e; --text3: #f0f6fc;
+    --yellow: #e3b341; --red: #f85149; --teal: #39d353;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px; line-height: 1.7; }
+
+  /* ── NAV ── */
+  nav { position: sticky; top: 0; background: rgba(13,17,23,0.95); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border); z-index: 100; padding: 0 2rem; display: flex;
+    align-items: center; gap: 1.5rem; height: 56px; overflow-x: auto; white-space: nowrap; }
+  nav a { color: var(--text2); text-decoration: none; font-size: 13px; padding: 4px 10px;
+    border-radius: 6px; transition: all .2s; }
+  nav a:hover { color: var(--accent); background: var(--bg3); }
+  .nav-logo { color: var(--accent); font-weight: 700; font-size: 15px; margin-right: 1rem; }
+
+  /* ── HERO ── */
+  .hero { background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d2137 100%);
+    padding: 4rem 2rem; text-align: center; border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(88,166,255,.08) 0%, transparent 70%),
+                radial-gradient(ellipse at 70% 50%, rgba(63,185,80,.06) 0%, transparent 70%); }
+  .hero h1 { font-size: clamp(1.8rem,4vw,3rem); font-weight: 800; color: var(--text3);
+    position: relative; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { margin-top: .8rem; color: var(--text2); font-size: 1.05rem; max-width: 700px;
+    margin-inline: auto; position: relative; }
+  .badge-row { display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap;
+    margin-top: 1.5rem; position: relative; }
+  .badge { padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    border: 1px solid; }
+  .badge-blue  { background: rgba(88,166,255,.12); border-color: rgba(88,166,255,.4); color: var(--accent); }
+  .badge-green { background: rgba(63,185,80,.12);  border-color: rgba(63,185,80,.4);  color: var(--accent2); }
+  .badge-orange{ background: rgba(255,166,87,.12); border-color: rgba(255,166,87,.4); color: var(--accent5); }
+  .badge-purple{ background: rgba(210,168,255,.12);border-color: rgba(210,168,255,.4);color: var(--accent4); }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+  section { margin-bottom: 3rem; scroll-margin-top: 70px; }
+  h2 { font-size: 1.6rem; color: var(--text3); border-left: 4px solid var(--accent);
+    padding-left: .8rem; margin-bottom: 1.2rem; }
+  h3 { font-size: 1.15rem; color: var(--accent); margin: 1.4rem 0 .6rem; }
+  h4 { font-size: 1rem; color: var(--accent5); margin: 1rem 0 .4rem; }
+  p { margin-bottom: .8rem; }
+  ul, ol { padding-left: 1.4rem; margin-bottom: .8rem; }
+  li { margin-bottom: .3rem; }
+
+  /* ── CARDS ── */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.4rem; margin-bottom: 1rem; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 1rem; }
+  .card h3 { margin-top: 0; }
+  .card-icon { font-size: 1.8rem; margin-bottom: .5rem; }
+  .highlight-card { border-color: var(--accent); background: linear-gradient(135deg, var(--bg2), #0d2137); }
+
+  /* ── CODE BLOCKS ── */
+  pre { background: #010409; border: 1px solid var(--border); border-radius: 8px;
+    padding: 1.2rem; overflow-x: auto; font-family: 'Consolas','Fira Code',monospace;
+    font-size: 13px; line-height: 1.6; margin: .8rem 0; }
+  code { font-family: 'Consolas','Fira Code',monospace; }
+  .inline-code { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
+    padding: 1px 6px; font-size: 12.5px; color: var(--accent2); }
+
+  /* Syntax highlight colours */
+  .kw  { color: #ff7b72; }  /* keyword */
+  .fn  { color: #d2a8ff; }  /* function */
+  .st  { color: #a5d6ff; }  /* string */
+  .cm  { color: #8b949e; }  /* comment */
+  .nm  { color: #79c0ff; }  /* name/var */
+  .op  { color: #ff7b72; }  /* operator */
+  .nb  { color: #ffa657; }  /* number */
+
+  /* ── MATH BOXES ── */
+  .math-box { background: #010409; border: 1px solid var(--border); border-left: 3px solid var(--accent4);
+    border-radius: 8px; padding: 1rem 1.4rem; margin: .8rem 0;
+    font-family: 'Consolas', monospace; font-size: 14px; color: var(--accent4); overflow-x: auto; }
+  .math-label { font-size: 11px; color: var(--text2); margin-bottom: .4rem; text-transform: uppercase;
+    letter-spacing: .05em; }
+
+  /* ── TABLES ── */
+  .tbl-wrap { overflow-x: auto; margin: 1rem 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th { background: var(--bg3); color: var(--text3); padding: 10px 14px;
+    text-align: left; border-bottom: 2px solid var(--border); font-size: 12px;
+    text-transform: uppercase; letter-spacing: .05em; }
+  tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tbody tr:hover td { background: var(--bg3); }
+  .td-good  { color: var(--accent2); font-weight: 600; }
+  .td-bad   { color: var(--red); }
+  .td-mid   { color: var(--yellow); }
+
+  /* ── TIMELINE ── */
+  .timeline { position: relative; padding-left: 2rem; }
+  .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0;
+    width: 2px; background: var(--border); }
+  .tl-item { position: relative; margin-bottom: 1.4rem; }
+  .tl-dot { position: absolute; left: -2rem; top: 4px; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+  .tl-item h4 { margin-top: 0; color: var(--text3); }
+
+  /* ── DIAGRAM ── */
+  .diagram { background: #010409; border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.5rem; font-family: monospace; font-size: 13px; color: var(--text2);
+    overflow-x: auto; white-space: pre; line-height: 1.8; }
+
+  /* ── CALLOUT ── */
+  .callout { border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0; border-left: 4px solid; }
+  .callout-blue   { background: rgba(88,166,255,.08);  border-color: var(--accent);  color: var(--text); }
+  .callout-green  { background: rgba(63,185,80,.08);   border-color: var(--accent2); color: var(--text); }
+  .callout-orange { background: rgba(255,166,87,.08);  border-color: var(--accent5); color: var(--text); }
+  .callout-red    { background: rgba(248,81,73,.08);   border-color: var(--red);     color: var(--text); }
+  .callout strong { color: inherit; }
+
+  /* ── Q&A ACCORDION ── */
+  details { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: .7rem; overflow: hidden; }
+  summary { padding: .9rem 1.2rem; cursor: pointer; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600; color: var(--text3); user-select: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; color: var(--accent); font-size: 1.3rem; flex-shrink: 0; }
+  details[open] summary::after { content: '−'; }
+  details[open] { border-color: var(--accent); }
+  .qa-body { padding: .8rem 1.2rem 1.2rem; border-top: 1px solid var(--border); }
+  .qa-tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px;
+    font-weight: 700; margin-bottom: .6rem; text-transform: uppercase; }
+  .tag-theory  { background: rgba(88,166,255,.15); color: var(--accent); }
+  .tag-impl    { background: rgba(63,185,80,.15);  color: var(--accent2); }
+  .tag-math    { background: rgba(210,168,255,.15);color: var(--accent4); }
+  .tag-compare { background: rgba(255,166,87,.15); color: var(--accent5); }
+
+  /* ── PROGRESS BARS ── */
+  .metric-bar { margin: .5rem 0; }
+  .metric-label { display: flex; justify-content: space-between; font-size: 12px;
+    color: var(--text2); margin-bottom: 3px; }
+  .bar-track { background: var(--bg3); border-radius: 4px; height: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 640px) { .card-grid { grid-template-columns: 1fr; } }
+
+  /* ── TOC pill numbers ── */
+  .sec-num { display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; background: var(--accent);
+    color: #000; font-weight: 800; font-size: 12px; margin-right: .5rem; flex-shrink: 0; }
+  .section-header { display: flex; align-items: center; margin-bottom: 1.2rem; }
+  .section-header h2 { border: none; padding: 0; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════ NAV -->
+<nav>
+  <span class="nav-logo">🎙 SpeechEnhance</span>
+  <a href="#overview">Overview</a>
+  <a href="#signal-model">Signal Model</a>
+  <a href="#adaptive">Adaptive Filters</a>
+  <a href="#lms">LMS/NLMS/RLS</a>
+  <a href="#wiener">Wiener/SS</a>
+  <a href="#neural">Neural Models</a>
+  <a href="#metrics">Metrics</a>
+  <a href="#pipeline">Pipeline</a>
+  <a href="#dataset">Dataset</a>
+  <a href="#results">Results</a>
+  <a href="#qa">Interview Q&A</a>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════════ HERO -->
+<div class="hero">
+  <h1>Speech Signal Enhancement<br/><span>Adaptive + Neural Methods</span></h1>
+  <p>A complete course-project guide — from first principles of adaptive filtering through deep learning mask estimation, with every formula, algorithm, and interview question answered.</p>
+  <div class="badge-row">
+    <span class="badge badge-blue">Adaptive Signal Processing</span>
+    <span class="badge badge-green">Deep Learning</span>
+    <span class="badge badge-orange">LMS / NLMS / RLS</span>
+    <span class="badge badge-purple">BLSTM · CRN · IRM</span>
+    <span class="badge badge-blue">PESQ · STOI · SNR</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ══════════════════════════════════════════════════════════════════════ §1 OVERVIEW -->
+<section id="overview">
+  <div class="section-header"><span class="sec-num">1</span><h2>Project Overview</h2></div>
+
+  <p>Speech enhancement is the task of recovering a clean speech signal <em>s(n)</em> from a degraded observation <em>y(n)</em>. Real-world speech is corrupted by background noise, reverberation, channel distortion, and interfering speakers. Our project implements and compares <strong>seven enhancement algorithms</strong> spanning two major paradigms:</p>
+
+  <div class="card-grid">
+    <div class="card highlight-card">
+      <div class="card-icon">⚙️</div>
+      <h3>Adaptive / Classical Methods</h3>
+      <ul>
+        <li><strong>LMS</strong> – Least Mean Squares</li>
+        <li><strong>NLMS</strong> – Normalised LMS</li>
+        <li><strong>RLS</strong> – Recursive Least Squares</li>
+        <li><strong>Wiener Filter</strong> – Decision-directed</li>
+        <li><strong>Spectral Subtraction</strong> – Boll 1979</li>
+      </ul>
+      <p style="color:var(--text2);font-size:13px;margin-top:.6rem">Work in time or frequency domain; exploit statistical models of noise and speech.</p>
+    </div>
+    <div class="card highlight-card">
+      <div class="card-icon">🧠</div>
+      <h3>Neural / Deep Learning Methods</h3>
+      <ul>
+        <li><strong>BLSTM</strong> – Bidirectional LSTM mask estimator</li>
+        <li><strong>CRN</strong> – Convolutional Recurrent Network</li>
+      </ul>
+      <p style="color:var(--text2);font-size:13px;margin-top:.6rem">Learn a mapping from noisy STFT features to an Ideal Ratio Mask (IRM) via supervised training on paired data.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-blue">
+    <strong>Course context:</strong> This project is part of an <em>Adaptive Signal Processing</em> course. The neural methods are included to show how classical ideas (Wiener filtering, optimal estimation) motivated deep-learning architectures, and how both can be evaluated with the same metrics.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §2 SIGNAL MODEL -->
+<section id="signal-model">
+  <div class="section-header"><span class="sec-num">2</span><h2>Noisy Speech Signal Model</h2></div>
+
+  <h3>Additive Noise Model</h3>
+  <p>The most common model assumes the observed (microphone) signal is an additive mixture:</p>
+  <div class="math-box">
+    <div class="math-label">Time-domain additive model</div>
+    y(n)  =  s(n)  +  d(n)
+    
+    y(n) : observed noisy speech
+    s(n) : clean speech (desired signal)
+    d(n) : additive noise (stationary or non-stationary)
+    n    : discrete time index
+  </div>
+
+  <h3>Signal-to-Noise Ratio (SNR)</h3>
+  <div class="math-box">
+    SNR = 10·log₁₀ ( P_s / P_d )  [dB]
+    
+    P_s = E[s²(n)]  = signal power
+    P_d = E[d²(n)]  = noise power
+  </div>
+
+  <h3>STFT Domain Representation</h3>
+  <p>Most modern methods operate in the Short-Time Fourier Transform (STFT) domain:</p>
+  <div class="math-box">
+    Y(k, l) = S(k, l) + D(k, l)
+    
+    k : frequency bin index  (0 … N/2)
+    l : time frame index
+    
+    STFT:  X(k,l) = Σ_{n=0}^{N-1}  x(n + l·H) · w(n) · e^{-j2πkn/N}
+    
+    w(n) : analysis window (Hann)
+    N    : FFT size       (512)
+    H    : hop size       (128)
+  </div>
+
+  <h3>Types of Noise Encountered</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Type</th><th>PSD Shape</th><th>Stationarity</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>White</td><td>Flat (all frequencies)</td><td class="td-good">Stationary</td><td>Electronic thermal noise</td></tr>
+      <tr><td>Pink</td><td>1/f roll-off</td><td class="td-good">Quasi-stationary</td><td>Ventilation, traffic</td></tr>
+      <tr><td>Babble</td><td>Speech-shaped</td><td class="td-bad">Non-stationary</td><td>Cafeteria, crowd</td></tr>
+      <tr><td>Car</td><td>Low-freq dominated</td><td class="td-mid">Slowly varying</td><td>Road noise</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §3 ADAPTIVE -->
+<section id="adaptive">
+  <div class="section-header"><span class="sec-num">3</span><h2>Adaptive Filtering — Core Theory</h2></div>
+
+  <h3>What is an Adaptive Filter?</h3>
+  <p>An adaptive filter is a digital filter whose coefficients are <strong>automatically adjusted</strong> by an algorithm to minimise a cost function. Unlike fixed filters, they track non-stationary signals in real time.</p>
+
+  <div class="diagram">  ┌───────────────────────────────────────────────────────────┐
+  │                  ADAPTIVE NOISE CANCELLER                   │
+  │                                                             │
+  │  Primary mic:  y(n) = s(n) + d₁(n)  ────────────┐          │
+  │                                                  ▼  (+)     │
+  │  Reference mic: x(n) ≈ d₀(n)  ──► [W(z)] ──► ŷ(n) ──► e(n)│
+  │                                     ▲                  │   │
+  │                                     └─── Weight Update ┘   │
+  │                                            (LMS/RLS)        │
+  │                                                             │
+  │  e(n) = y(n) − ŷ(n)  →  enhanced speech output             │
+  └───────────────────────────────────────────────────────────┘</div>
+
+  <h3>The Wiener–Hopf Equation (Optimal Filter)</h3>
+  <p>The Wiener–Hopf equation gives the <strong>optimal (minimum MSE) filter weights</strong> for stationary inputs:</p>
+  <div class="math-box">
+    R_xx · w_opt  =  r_dx
+    
+    R_xx : (M×M) autocorrelation matrix of input x(n)
+    r_dx : (M×1) cross-correlation vector of desired d(n) and x(n)
+    w_opt: optimal tap-weight vector
+    
+    Minimum MSE (MMSE):
+    ξ_min = σ_d² − r_dx^T · w_opt = σ_d² − r_dx^T · R_xx^{-1} · r_dx
+  </div>
+
+  <div class="callout callout-orange">
+    <strong>Key insight:</strong> Adaptive algorithms (LMS, RLS) are iterative methods that converge toward <em>w_opt</em> without explicitly inverting R_xx. LMS uses gradient descent; RLS uses the matrix inversion lemma for exact updates.
+  </div>
+
+  <h3>Error Surface and Convergence</h3>
+  <p>The MSE error surface as a function of the weight vector is a <strong>paraboloid (bowl-shape)</strong>. The minimum is <em>ξ_min</em> at <em>w_opt</em>. Adaptive algorithms perform gradient descent on this surface.</p>
+  <div class="math-box">
+    MSE as a function of weights:
+    ξ(w) = σ_d² − 2·w^T·r_dx + w^T·R_xx·w
+    
+    Gradient:
+    ∇_w ξ = −2·r_dx + 2·R_xx·w
+    
+    At optimum:  ∇_w ξ = 0  →  R_xx·w = r_dx  (Wiener-Hopf)
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §4 LMS -->
+<section id="lms">
+  <div class="section-header"><span class="sec-num">4</span><h2>LMS, NLMS & RLS Algorithms</h2></div>
+
+  <h3>4.1 LMS – Least Mean Squares</h3>
+  <p>The LMS algorithm uses an <strong>instantaneous gradient estimate</strong> (replaces true gradient with one-sample estimate):</p>
+  <div class="math-box">
+    <div class="math-label">LMS Update Rule</div>
+    Filter output:    y(n) = w^T(n) · x(n)
+    Error:            e(n) = d(n) − y(n)
+    Weight update:    w(n+1) = w(n) + 2μ·e(n)·x(n)
+    
+    μ : step size (learning rate)
+    Stability condition:  0 &lt; μ &lt; 1 / (M · λ_max)
+    
+    where λ_max = largest eigenvalue of R_xx ≈ M·σ_x²
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>✅ Advantages of LMS</h4>
+      <ul>
+        <li>Extremely simple: O(M) per sample</li>
+        <li>No matrix operations needed</li>
+        <li>Robust to quantisation errors</li>
+        <li>Works well for stationary noise</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>❌ Disadvantages of LMS</h4>
+      <ul>
+        <li>Slow convergence for correlated inputs</li>
+        <li>Step size μ hard to tune</li>
+        <li>Performance degrades for non-stationary noise</li>
+        <li>Gradient noise (misadjustment)</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>The <strong>misadjustment</strong> (excess MSE / minimum MSE) for LMS is:</p>
+  <div class="math-box">
+    M_adj ≈ μ · tr(R_xx) = μ · M · σ_x²   (for small μ)
+    
+    Trade-off:  Large μ → fast convergence, high misadjustment
+                Small μ → slow convergence, low misadjustment (steady state)
+  </div>
+
+  <h3>4.2 NLMS – Normalised LMS</h3>
+  <p>Normalises the step size by the instantaneous input power, giving a <strong>variable effective step size</strong> that is independent of input power:</p>
+  <div class="math-box">
+    <div class="math-label">NLMS Update Rule</div>
+    w(n+1) = w(n) + [μ / (ε + ||x(n)||²)] · e(n) · x(n)
+    
+    Effective step:  μ_eff(n) = μ / (ε + ||x(n)||²)
+    ε : regularisation (prevents divide-by-zero, typ. 10⁻⁸)
+    
+    Stability:  0 &lt; μ &lt; 2   (for any input power)
+    Optimal:    μ = 1 (fastest convergence)
+  </div>
+  
+  <div class="callout callout-green">
+    <strong>NLMS vs LMS:</strong> NLMS achieves the same steady-state MSE as LMS but converges faster when the input has highly variable power (e.g., speech has 40 dB dynamic range). It is the go-to adaptive filter for most practical speech cancellation systems.
+  </div>
+
+  <h3>4.3 RLS – Recursive Least Squares</h3>
+  <p>Minimises an <strong>exponentially-weighted sum of squared errors</strong> over the entire history, using the exact second-order statistics:</p>
+  <div class="math-box">
+    <div class="math-label">RLS Cost Function</div>
+    J(n) = Σ_{i=0}^{n}  λ^(n−i) · |e(i)|²
+    
+    λ : forgetting factor  (0 &lt; λ ≤ 1)
+          λ=1  → infinite memory (stationary)
+          λ&lt;1  → exponential forgetting (non-stationary)
+  </div>
+  <div class="math-box">
+    <div class="math-label">RLS Recursive Update (via Matrix Inversion Lemma)</div>
+    k(n)  = λ⁻¹ P(n−1) x(n) / [1 + λ⁻¹ x^T(n) P(n−1) x(n)]   ← Kalman gain
+    e(n)  = d(n) − w^T(n−1) x(n)                                ← a priori error
+    w(n)  = w(n−1) + k(n) · e(n)                                 ← weight update
+    P(n)  = λ⁻¹ [P(n−1) − k(n) x^T(n) P(n−1)]                  ← covariance update
+    
+    Initialisation:  w(0) = 0,  P(0) = δ⁻¹ I  (δ small → fast initial adapt)
+    Complexity:  O(M²) per sample
+  </div>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Algorithm</th><th>Complexity/sample</th><th>Convergence</th><th>Misadjustment</th><th>Tracks non-stat.</th></tr></thead>
+    <tbody>
+      <tr><td><strong>LMS</strong></td><td class="td-good">O(M)</td><td class="td-bad">Slow</td><td class="td-mid">μ·tr(R)</td><td class="td-bad">Poor</td></tr>
+      <tr><td><strong>NLMS</strong></td><td class="td-good">O(M)</td><td class="td-mid">Moderate</td><td class="td-good">Lower</td><td class="td-mid">Fair</td></tr>
+      <tr><td><strong>RLS</strong></td><td class="td-bad">O(M²)</td><td class="td-good">Fast (optimal)</td><td class="td-good">Very low</td><td class="td-good">Good</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §5 WIENER/SS -->
+<section id="wiener">
+  <div class="section-header"><span class="sec-num">5</span><h2>Wiener Filter & Spectral Subtraction</h2></div>
+
+  <h3>5.1 Frequency-Domain Wiener Filter</h3>
+  <p>In the STFT domain, the optimal Wiener gain for each (frequency bin k, frame l) is:</p>
+  <div class="math-box">
+    H_W(k,l) = P_ss(k,l) / [P_ss(k,l) + P_dd(k,l)]
+             = SNR_post(k,l) / [1 + SNR_post(k,l)]
+    
+    P_ss : speech power spectral density
+    P_dd : noise power spectral density
+    
+    Enhanced STFT:  Ŝ(k,l) = H_W(k,l) · Y(k,l)
+  </div>
+
+  <h3>Decision-Directed SNR Estimation (Ephraim–Malah 1984)</h3>
+  <p>Since P_ss is unknown, we estimate the <em>prior SNR</em> using the decision-directed approach:</p>
+  <div class="math-box">
+    ξ̂(k,l)  =  α · |Ŝ(k,l−1)|² / P̂_dd(k,l)
+             + (1−α) · max[γ(k,l)−1, 0]
+    
+    γ(k,l) = |Y(k,l)|² / P̂_dd(k,l)    ← posterior SNR
+    ξ̂      : prior SNR estimate
+    α       : smoothing constant (typ. 0.92–0.98)
+    
+    Wiener gain becomes:  H(k,l) = ξ̂(k,l) / [1 + ξ̂(k,l)]
+  </div>
+
+  <h3>5.2 Spectral Subtraction (Boll 1979)</h3>
+  <p>Simpler approach: subtract an estimate of the noise magnitude spectrum:</p>
+  <div class="math-box">
+    |Ŝ(k,l)| = max( |Y(k,l)| − α_over · |D̂(k,l)| ,  β·|Y(k,l)| )
+    
+    α_over : over-subtraction factor (>1, reduces musical noise)  typ. 1.0–2.0
+    β      : spectral floor (prevents negative spectra)           typ. 0.01–0.05
+    
+    Phase:  φ_Ŝ(k,l) = φ_Y(k,l)   (original noisy phase)
+    
+    "Musical noise" artefact: isolated spectral peaks after subtraction
+    → reduced by over-subtraction or non-linear post-filtering
+  </div>
+
+  <div class="callout callout-orange">
+    <strong>Musical noise</strong> is the main artefact of spectral subtraction. It arises because the noise spectrum estimate is noisy itself, creating sporadic residual spikes. The Wiener filter reduces this by smoothing the gain function using the decision-directed approach.
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §6 NEURAL -->
+<section id="neural">
+  <div class="section-header"><span class="sec-num">6</span><h2>Neural Speech Enhancement</h2></div>
+
+  <h3>6.1 Masking-Based Enhancement</h3>
+  <p>Neural methods estimate a <strong>Time-Frequency mask</strong> M(k,l) applied to the noisy magnitude:</p>
+  <div class="math-box">
+    |Ŝ(k,l)| = M(k,l) · |Y(k,l)|
+    
+    Ideal Ratio Mask (IRM):
+    M_IRM(k,l) = P_ss(k,l) / [P_ss(k,l) + P_dd(k,l)]   ← same as Wiener gain!
+    
+    Ideal Binary Mask (IBM):
+    M_IBM(k,l) = 1  if  SNR_local(k,l) > threshold
+               = 0  otherwise
+  </div>
+
+  <div class="callout callout-blue">
+    <strong>Key connection:</strong> The IRM is mathematically identical to the optimal Wiener filter gain. Deep neural networks learn to <em>estimate</em> the IRM from the noisy input, replacing hand-crafted statistical models with learned ones.
+  </div>
+
+  <h3>6.2 BLSTM Architecture</h3>
+  <div class="diagram">  Input: log-magnitude spectrogram  (B, T, 257)
+       │
+       ├─ LayerNorm(257)
+       │
+       ├─ BiLSTM Layer 1  [hidden=256 each direction → 512]
+       ├─ BiLSTM Layer 2  [hidden=256 each direction → 512]
+       └─ BiLSTM Layer 3  [hidden=256 each direction → 512]
+                │
+                ├─ FC(512 → 256) + ReLU + Dropout(0.2)
+                └─ FC(256 → 257) + Sigmoid
+                         │
+                     IRM Mask  (B, T, 257)  ∈ (0,1)
+                         │
+              Enhanced = Mask ⊙ |Y|    (element-wise multiply)</div>
+
+  <p>The BiLSTM processes each time frame with context from <strong>both past and future frames</strong>, which is important for non-causal enhancement (offline processing).</p>
+
+  <h3>6.3 CRN – Convolutional Recurrent Network</h3>
+  <div class="diagram">  Input spectrogram  (B, 1, T, F=257)
+       │
+  ┌────────────────── ENCODER ──────────────────┐
+  │  Conv2D(1→16,  stride_F=2) → BN → ELU     e1│  (B,16,T,128)
+  │  Conv2D(16→32, stride_F=2) → BN → ELU     e2│  (B,32,T,64)
+  │  Conv2D(32→64, stride_F=2) → BN → ELU     e3│  (B,64,T,32)
+  │  Conv2D(64→128,stride_F=2) → BN → ELU     e4│  (B,128,T,16)
+  └─────────────────────────────────────────────┘
+       │  reshape (B, T, 128×16)
+  ┌────────────────── BLSTM BOTTLE ─────────────┐
+  │  BiLSTM(2048 → 128+128) × 2 layers           │
+  │  Linear(256 → 2048)                          │
+  └─────────────────────────────────────────────┘
+       │  reshape (B, 128, T, 16)
+  ┌────────────────── DECODER ──────────────────┐
+  │  DeConv(128+128→64) + skip(e4) → BN → ELU   │  skip connections
+  │  DeConv(64+64→32)  + skip(e3) → BN → ELU   │  from encoder
+  │  DeConv(32+32→16)  + skip(e2) → BN → ELU   │  (U-Net style)
+  │  DeConv(16+16→1)   + skip(e1) → BN → ELU   │
+  └─────────────────────────────────────────────┘
+       │  Sigmoid
+  IRM Mask  (B, 1, T, 257)</div>
+
+  <h3>6.4 Loss Function</h3>
+  <div class="math-box">
+    L_total = λ_mask · L_mask  +  λ_mag · L_mag
+    
+    L_mask = MSE(M_pred, M_IRM)           ← mask supervision
+    L_mag  = L1(M_pred ⊙ |Y|, |S|)       ← magnitude reconstruction
+    
+    λ_mask = 0.7,  λ_mag = 0.3   (empirically tuned)
+  </div>
+
+  <h3>6.5 Training Details</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Hyperparameter</th><th>Value</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr><td>Optimiser</td><td>AdamW</td><td>Weight decay regularisation</td></tr>
+      <tr><td>Learning rate</td><td>1×10⁻³ → ReduceLROnPlateau</td><td>Auto-decays on plateau</td></tr>
+      <tr><td>Batch size</td><td>16</td><td>Memory / convergence balance</td></tr>
+      <tr><td>Grad clip</td><td>5.0</td><td>Prevents LSTM gradient explosion</td></tr>
+      <tr><td>Early stopping</td><td>patience=10</td><td>Prevents overfitting</td></tr>
+      <tr><td>Train SNRs</td><td>0, 5, 10, 15 dB</td><td>Multi-condition training</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §7 METRICS -->
+<section id="metrics">
+  <div class="section-header"><span class="sec-num">7</span><h2>Evaluation Metrics</h2></div>
+
+  <h3>7.1 SNR & Segmental SNR</h3>
+  <div class="math-box">
+    Global SNR = 10·log₁₀ ( ||s||² / ||s − ŝ||² )   [dB]
+    
+    Segmental SNR = (1/L) Σ_l  10·log₁₀ ( ||s_l||² / ||s_l − ŝ_l||² )
+    
+    Clipped to [−10, 35] dB per frame to avoid outlier dominance.
+    SSNR correlates better with perceptual quality than global SNR.
+  </div>
+
+  <h3>7.2 PESQ – Perceptual Evaluation of Speech Quality</h3>
+  <p>ITU-T P.862 standard. Computes perceptual disturbance using a model of the human auditory system.</p>
+  <div class="math-box">
+    Range: −0.5 to 4.5  (MOS-LQO scale)
+    4.5 = imperceptible degradation
+    1.0 = bad quality
+    
+    Wideband (P.862.2): uses 50–7000 Hz, better for 16 kHz speech.
+  </div>
+  <div class="metric-bar"><div class="metric-label"><span>Excellent (&gt;4.0)</span><span>Acceptable (&gt;3.0)</span><span>Poor (&lt;2.0)</span></div>
+  <div class="bar-track"><div class="bar-fill" style="width:75%"></div></div></div>
+
+  <h3>7.3 STOI – Short-Time Objective Intelligibility</h3>
+  <div class="math-box">
+    Range: 0 to 1
+    &gt; 0.9 : Highly intelligible
+    0.7–0.9: Acceptable
+    &lt; 0.7 : Difficult to understand
+    
+    Computes correlation between clean and enhanced short-time spectral
+    envelopes in one-third octave bands.
+  </div>
+
+  <h3>7.4 Log-Spectral Distortion (LSD)</h3>
+  <div class="math-box">
+    LSD = (1/T) Σ_t √[ (1/K) Σ_k (log P_s(t,k) − log P_ŝ(t,k))² ]
+    
+    Smaller is better. Measures spectral shape distortion in log domain.
+  </div>
+
+  <h3>Metric Interpretation Guide</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Metric</th><th>Better</th><th>Good Range</th><th>Measures</th></tr></thead>
+    <tbody>
+      <tr><td>SNR (dB)</td><td class="td-good">Higher ↑</td><td>&gt;15 dB enhanced</td><td>Overall noise level</td></tr>
+      <tr><td>SSNR (dB)</td><td class="td-good">Higher ↑</td><td>&gt;10 dB</td><td>Frame-level noise</td></tr>
+      <tr><td>PESQ</td><td class="td-good">Higher ↑</td><td>&gt;3.0 MOS</td><td>Perceived quality</td></tr>
+      <tr><td>STOI</td><td class="td-good">Higher ↑</td><td>&gt;0.85</td><td>Intelligibility</td></tr>
+      <tr><td>LSD (dB)</td><td class="td-bad">Lower ↓</td><td>&lt;2.0 dB</td><td>Spectral distortion</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §8 PIPELINE -->
+<section id="pipeline">
+  <div class="section-header"><span class="sec-num">8</span><h2>System Pipeline</h2></div>
+
+  <div class="diagram">  ┌─────────────────────────────────────────────────────────────────┐
+  │                  SPEECH ENHANCEMENT PIPELINE                      │
+  └─────────────────────────────────────────────────────────────────┘
+  
+  INPUT
+  ├─ Clean speech WAV  ───┐
+  └─ Noise WAV            │                       
+                          ▼                       
+               ┌─────────────────┐               
+               │  Add Noise at   │               
+               │  target SNR     │               
+               └────────┬────────┘               
+                        │ Noisy Speech y(n)
+                        ▼
+          ┌─────────────────────────────┐
+          │      PREPROCESSING          │
+          │  • Normalisation            │
+          │  • STFT (N=512, H=128)      │
+          │  • Log-magnitude features   │
+          └──────────┬──────────────────┘
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+    ┌─────▼──────┐        ┌─────▼──────────┐
+    │  ADAPTIVE  │        │    NEURAL       │
+    │  METHODS   │        │    METHODS      │
+    ├────────────┤        ├─────────────────┤
+    │ LMS        │        │ BLSTM           │
+    │ NLMS       │        │ CRN             │
+    │ RLS        │        │                 │
+    │ Wiener     │        │ (IRM mask)      │
+    │ Spec. Sub. │        │                 │
+    └─────┬──────┘        └─────┬───────────┘
+          │                     │
+          └──────────┬──────────┘
+                     │ Enhanced signals
+          ┌──────────▼──────────┐
+          │    EVALUATION       │
+          │  SNR / SSNR         │
+          │  PESQ / STOI / LSD  │
+          └──────────┬──────────┘
+                     │
+          ┌──────────▼──────────┐
+          │    OUTPUTS          │
+          │  WAV files          │
+          │  Plots / Metrics    │
+          └─────────────────────┘</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §9 DATASET -->
+<section id="dataset">
+  <div class="section-header"><span class="sec-num">9</span><h2>Dataset & Resources</h2></div>
+
+  <h3>Primary: NOIZEUS Corpus</h3>
+  <div class="card">
+    <p><strong>URL:</strong> <a href="https://ecs.utdallas.edu/loizou/speech/noizeus.zip" style="color:var(--accent)">https://ecs.utdallas.edu/loizou/speech/noizeus.zip</a></p>
+    <ul>
+      <li>30 IEEE sentences (15 male, 15 female speakers)</li>
+      <li>Noisy versions at 0, 5, 10, 15 dB SNR</li>
+      <li>8 noise types: suburban train, babble, car, exhibition hall, restaurant, street, airport, station</li>
+      <li>Sample rate: 8 kHz (upsampled to 16 kHz in our scripts)</li>
+      <li>Widely used benchmark in speech enhancement literature</li>
+    </ul>
+  </div>
+
+  <h3>Secondary / Synthetic</h3>
+  <div class="card">
+    <p>Our <span class="inline-code">download_dataset.py</span> generates synthetic voiced-speech approximations when NOIZEUS is unavailable:</p>
+    <ul>
+      <li>Voiced speech model: F0 + formants F1/F2/F3 convolved with glottal pulse train</li>
+      <li>6 noise types synthesised: white, pink, babble, car, restaurant, street</li>
+      <li>Configurable SNR levels: −5, 0, 5, 10, 15, 20 dB</li>
+    </ul>
+    <pre><span class="kw">python</span> data/download_dataset.py <span class="op">--</span>dataset synthetic <span class="op">--</span>n_clean 200</pre>
+  </div>
+
+  <h3>LibriSpeech (Optional)</h3>
+  <div class="card">
+    <p><strong>URL:</strong> <a href="https://www.openslr.org/12" style="color:var(--accent)">https://www.openslr.org/12</a></p>
+    <p>960 hours of read English speech. Use <span class="inline-code">dev-clean.tar.gz</span> (337 MB) for a clean evaluation set.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §10 RESULTS -->
+<section id="results">
+  <div class="section-header"><span class="sec-num">10</span><h2>Expected Results</h2></div>
+
+  <p>Typical improvements observed on white-noise at 0 dB input SNR:</p>
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr><th>Method</th><th>ΔSNR (dB)</th><th>PESQ</th><th>STOI</th><th>Speed</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Noisy Input</td><td>0.0</td><td>~1.4</td><td>~0.68</td><td>–</td></tr>
+      <tr><td>Spectral Sub.</td><td class="td-mid">+5–8</td><td class="td-mid">1.8–2.2</td><td class="td-mid">0.72–0.78</td><td class="td-good">Very Fast</td></tr>
+      <tr><td>LMS</td><td class="td-mid">+4–7</td><td class="td-mid">1.7–2.0</td><td class="td-mid">0.70–0.76</td><td class="td-good">Fast</td></tr>
+      <tr><td>NLMS</td><td class="td-mid">+5–8</td><td class="td-mid">1.8–2.2</td><td class="td-mid">0.72–0.78</td><td class="td-good">Fast</td></tr>
+      <tr><td>RLS</td><td class="td-good">+7–10</td><td class="td-good">2.1–2.5</td><td class="td-good">0.76–0.82</td><td class="td-mid">Moderate</td></tr>
+      <tr><td>Wiener (DD)</td><td class="td-good">+8–12</td><td class="td-good">2.3–2.8</td><td class="td-good">0.80–0.86</td><td class="td-good">Fast</td></tr>
+      <tr><td>BLSTM</td><td class="td-good">+10–15</td><td class="td-good">2.8–3.3</td><td class="td-good">0.85–0.91</td><td class="td-mid">GPU needed</td></tr>
+      <tr><td>CRN</td><td class="td-good">+12–16</td><td class="td-good">3.0–3.5</td><td class="td-good">0.88–0.93</td><td class="td-mid">GPU needed</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--text2);font-size:13px;margin-top:.5rem">* Ranges reflect variance across noise types and test utterances. Neural models are trained for 50 epochs on synthetic data; real NOIZEUS results will differ.</p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ §11 Q&A -->
+<section id="qa">
+  <div class="section-header"><span class="sec-num">11</span><h2>Interview Q&A — All Questions Answered</h2></div>
+  <p style="color:var(--text2);margin-bottom:1.4rem">Click any question to expand the full answer. These cover every topic a course instructor or interviewer would ask about this project.</p>
+
+  <!-- ── THEORY ── -->
+  <h3 style="margin-bottom:.6rem">🔬 Fundamentals & Theory</h3>
+
+  <details>
+    <summary>Q1. What is the Wiener–Hopf equation and why is it important?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-math">Math</span>
+      <p>The Wiener–Hopf equation <strong>R_xx · w_opt = r_dx</strong> gives the closed-form solution for the optimal linear filter weights that minimise the mean-squared error between the filter output and a desired signal.</p>
+      <div class="math-box">R_xx · w_opt = r_dx   →   w_opt = R_xx⁻¹ · r_dx</div>
+      <p>It is important because: (1) it defines the performance bound — no linear time-invariant filter can do better; (2) all adaptive algorithms (LMS, RLS) converge towards this solution; (3) the frequency-domain Wiener filter is derived directly from it and is used in our project's Wiener enhancement module.</p>
+      <p>The minimum achievable MSE is: <strong>ξ_min = σ_d² − r_dx^T · R_xx⁻¹ · r_dx</strong></p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q2. Derive the LMS weight update rule from the steepest-descent algorithm.</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-math">Math</span>
+      <p><strong>Step 1:</strong> The steepest-descent algorithm updates weights in the direction of the negative gradient:</p>
+      <div class="math-box">w(n+1) = w(n) − μ · ∇_w ξ(n)
+∇_w ξ = −2·r_dx + 2·R_xx·w(n)  (exact gradient)</div>
+      <p><strong>Step 2:</strong> LMS replaces the true gradient with its instantaneous estimate using a single data sample:</p>
+      <div class="math-box">ê[∇_w ξ] = −2·e(n)·x(n)  (where e(n)=d(n)−y(n))</div>
+      <p><strong>Step 3:</strong> Substituting gives the LMS rule:</p>
+      <div class="math-box">w(n+1) = w(n) + 2μ·e(n)·x(n)</div>
+      <p>The instantaneous gradient is an unbiased estimate of the true gradient: E[−2e(n)x(n)] = −2r_dx + 2R_xx·w(n).</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q3. What is the convergence condition for the LMS algorithm? How does it affect speech enhancement?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <p>For LMS to converge in the mean-square sense, the step size must satisfy:</p>
+      <div class="math-box">0 &lt; μ &lt; 1 / (M · λ_max)
+where λ_max = largest eigenvalue of R_xx ≈ M · σ_x² (for white input)</div>
+      <p><strong>In speech enhancement:</strong> Speech has a high dynamic range (~40 dB). When speech is loud, σ_x² is large, requiring a very small μ to maintain stability. This makes LMS slow to converge during high-power frames. NLMS solves this by dividing by ||x||² at each step.</p>
+      <p><strong>Practical rule:</strong> Set μ ≈ 0.01 / (M · σ_x²) as a starting point. If the signal is normalised to unit variance, use μ ≈ 0.01 for M=32.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q4. Why does RLS converge faster than LMS? What is the trade-off?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-compare">Comparison</span>
+      <p><strong>Why faster:</strong> RLS minimises the exact exponentially-weighted least-squares cost over all past samples. It estimates and inverts the input correlation matrix R_xx recursively using the Matrix Inversion Lemma. This gives it "second-order" information (curvature of the error surface) while LMS only uses first-order (gradient direction).</p>
+      <p>RLS converges in approximately <strong>2M iterations</strong> (M = filter order), while LMS needs <strong>O(λ_max/λ_min · M)</strong> iterations, where the eigenvalue spread of R_xx can be very large for correlated inputs.</p>
+      <p><strong>Trade-off:</strong></p>
+      <ul>
+        <li>Complexity: RLS is O(M²) per sample; LMS is O(M). For M=32, RLS needs ~32× more multiplications.</li>
+        <li>Numerical stability: P(n) can become non-positive-definite due to rounding errors. Square-root variants (QR-RLS) fix this.</li>
+        <li>Memory: RLS stores the M×M matrix P(n); LMS stores only the M-vector w(n).</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q5. What is misadjustment? How does it differ for LMS vs NLMS?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <p><strong>Misadjustment M_adj</strong> is the ratio of excess MSE (due to weight noise from gradient estimation) to the minimum MSE:</p>
+      <div class="math-box">LMS:  M_adj ≈ μ · tr(R_xx) = μ · M · σ_x²
+NLMS: M_adj ≈ μ / (2 − μ)   (independent of input power)</div>
+      <p><strong>Key difference:</strong> LMS misadjustment scales with input power σ_x². For speech, this means the misadjustment varies wildly frame-to-frame (speech vs silence). NLMS misadjustment is constant regardless of input power, making it more predictable and easier to design.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q6. What is "musical noise" in spectral subtraction and how do you reduce it?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <p><strong>Musical noise</strong> arises because the noise spectrum estimate is itself noisy. When we subtract it, some frequency bins get a large positive residual (spectral peak) while others go near-zero. The result is a random pattern of tone-like artefacts that changes frame-to-frame — perceived as a "musical" or "twittering" background.</p>
+      <p><strong>Reduction methods:</strong></p>
+      <ol>
+        <li><strong>Over-subtraction</strong> (α > 1): subtracts more noise than estimated, pushing most bins to the spectral floor. Reduces tonal artefacts but introduces some signal distortion.</li>
+        <li><strong>Spectral flooring</strong> (β factor): prevents bins from going to zero, creating a more uniform noise floor.</li>
+        <li><strong>Multi-band spectral subtraction</strong>: estimate noise per sub-band with different α values.</li>
+        <li><strong>Non-linear post-filtering</strong>: apply a smooth gain function instead of hard subtraction.</li>
+        <li><strong>Wiener filter (decision-directed)</strong>: temporal smoothing of the gain via α parameter nearly eliminates musical noise.</li>
+      </ol>
+    </div>
+  </details>
+
+  <!-- ── ADAPTIVE FILTER IMPL ── -->
+  <h3 style="margin-bottom:.6rem;margin-top:1.5rem">⚙️ Adaptive Filter Implementation</h3>
+
+  <details>
+    <summary>Q7. How is the adaptive filter used as a noise canceller in this project?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-impl">Implementation</span>
+      <p>We use the <strong>Adaptive Noise Cancellation (ANC)</strong> architecture:</p>
+      <ul>
+        <li><strong>Primary input</strong> y(n) = s(n) + d₁(n): speech corrupted by noise from a near-field microphone.</li>
+        <li><strong>Reference input</strong> x(n) ≈ d₀(n): a reference microphone close to the noise source, with little or no speech.</li>
+      </ul>
+      <p>The filter adapts to estimate d₁(n) from x(n). The error e(n) = y(n) − ŷ(n) is the noise-cancelled output (enhanced speech).</p>
+      <p>In our synthetic demo, the reference is the original noise signal (ideal case). In real deployments, the reference is an additional microphone or a delayed version of the primary.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q8. What is the forgetting factor λ in RLS and how should it be chosen?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <div class="math-box">Effective memory length ≈ 1 / (1−λ) samples
+λ = 0.99  → memory ≈ 100 samples (50 ms at 2 kHz update)
+λ = 0.95  → memory ≈  20 samples
+λ = 1.00  → infinite memory (fully stationary assumption)</div>
+      <p><strong>Choice guidelines:</strong></p>
+      <ul>
+        <li>Stationary noise (office HVAC): λ = 0.99–0.999</li>
+        <li>Slowly varying (car noise): λ = 0.99</li>
+        <li>Fast-varying (babble): λ = 0.95–0.98</li>
+        <li>Rule of thumb: effective memory should span one or two correlation lengths of the noise process.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q9. What is the difference between time-domain and frequency-domain adaptive filtering?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-compare">Comparison</span>
+      <p><strong>Time-domain:</strong> LMS/NLMS/RLS operate directly on the sample stream. Good for low-latency, causal processing. Computational cost O(M) per sample for LMS. For long filters (M > 256), convergence is slow due to eigenvalue spread of R_xx.</p>
+      <p><strong>Frequency-domain (block LMS, FLMS):</strong> Process a block of N samples via FFT, apply updates in frequency domain. Complexity O(N log N) for N-sample block. Converges faster for coloured inputs because frequency-domain updates effectively normalise each frequency bin independently (like per-bin NLMS).</p>
+      <p>Our Wiener filter and spectral subtraction are frequency-domain methods that update the noise PSD estimate per frame.</p>
+    </div>
+  </details>
+
+  <!-- ── NEURAL ── -->
+  <h3 style="margin-bottom:.6rem;margin-top:1.5rem">🧠 Neural Methods</h3>
+
+  <details>
+    <summary>Q10. Why is the IRM mathematically equivalent to the Wiener filter gain?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-math">Math</span>
+      <p>Both minimise the MSE between estimated and clean speech in the magnitude domain:</p>
+      <div class="math-box">Wiener gain:  H(k,l) = P_ss / (P_ss + P_nn)
+
+IRM:         M(k,l) = P_ss / (P_ss + P_nn)   ← identical!</div>
+      <p>The key insight: the neural network learns to <em>estimate</em> P_ss/(P_ss+P_nn) from the noisy observation, replacing the statistical noise/speech power models used in classical Wiener filtering with a data-driven estimator. The IRM is the theoretical upper bound on mask-based enhancement.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q11. Why use a Bidirectional LSTM for speech enhancement?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <p><strong>Why LSTM over simple RNN?</strong> Speech has long-term temporal dependencies (pitch periods, phoneme duration, prosody). LSTMs handle these via gated memory cells (input, forget, output gates), avoiding the vanishing gradient problem in long sequences.</p>
+      <p><strong>Why bidirectional?</strong> Enhancement is typically done offline (not real-time), so we can use future context. BiLSTM processes each frame with context from both past AND future frames, significantly improving mask estimation accuracy (typically +0.5–1 dB SNR vs unidirectional).</p>
+      <p><strong>Gate equations:</strong></p>
+      <div class="math-box">f_t = σ(W_f·[h_{t-1}, x_t] + b_f)    ← forget gate
+i_t = σ(W_i·[h_{t-1}, x_t] + b_i)    ← input gate
+o_t = σ(W_o·[h_{t-1}, x_t] + b_o)    ← output gate
+c_t = f_t⊙c_{t-1} + i_t⊙tanh(W_c·[h_{t-1},x_t]+b_c)  ← cell state
+h_t = o_t ⊙ tanh(c_t)                 ← hidden state</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q12. What is the advantage of CRN (Convolutional Recurrent Network) over BLSTM alone?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-compare">Comparison</span>
+      <ul>
+        <li><strong>Frequency downsampling:</strong> The CNN encoder reduces the frequency dimension by 16×, so the LSTM sees a compact representation. This dramatically reduces LSTM complexity (from 257 to ~16 features) while preserving multi-scale spectral patterns.</li>
+        <li><strong>Skip connections (U-Net style):</strong> High-resolution spectral details are preserved via encoder-decoder skip connections, avoiding information bottleneck.</li>
+        <li><strong>2D convolution:</strong> Captures local time-frequency patterns that 1D temporal models miss.</li>
+        <li><strong>Trade-off:</strong> CRN has more parameters and is harder to train. BLSTM converges more reliably with less data.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q13. What loss function is used and why combine mask loss with magnitude loss?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-impl">Implementation</span>
+      <div class="math-box">L = 0.7 · MSE(M_pred, M_IRM) + 0.3 · L1(M_pred⊙|Y|, |S|)</div>
+      <p><strong>Mask loss (MSE):</strong> Directly supervises the mask towards the IRM. Stable to optimise, gives clear gradient signal about mask accuracy.</p>
+      <p><strong>Magnitude loss (L1):</strong> Supervises the final enhanced magnitude directly. Catches cases where the mask is wrong but the product M·|Y| still distorts the speech. L1 is preferred over L2 for magnitude because L1 is more robust to outliers (large spectral peaks in voiced speech).</p>
+      <p><strong>Why combine?</strong> The mask loss alone can lead to over-suppression at very noisy bins. The magnitude reconstruction loss anchors the network to produce audibly correct output.</p>
+    </div>
+  </details>
+
+  <!-- ── IMPLEMENTATION ── -->
+  <h3 style="margin-bottom:.6rem;margin-top:1.5rem">💻 Implementation & Practical Questions</h3>
+
+  <details>
+    <summary>Q14. How do you estimate the noise PSD in real-time (without a reference microphone)?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-impl">Implementation</span>
+      <p>Common single-microphone noise estimation methods:</p>
+      <ol>
+        <li><strong>Initial silence estimation:</strong> Assume the first 50–100 ms is noise-only (VAD-based init). Works if there is always a noise-only period at start.</li>
+        <li><strong>Minimum statistics (Martin 2001):</strong> Track the minimum power in each frequency bin over a window. The minimum is a biased estimate of the noise floor (bias correction applied).</li>
+        <li><strong>MMSE-based recursive update:</strong> If current frame power is less than λ×previous noise PSD estimate, update noise estimate. Used in our Wiener filter implementation.</li>
+        <li><strong>VAD-gated estimation:</strong> Update noise PSD only during detected silence frames. VAD uses energy + zero-crossing rate thresholds.</li>
+      </ol>
+      <p>Our implementation uses a combination of (1) for initialisation and (3) for tracking.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q15. What are the STFT parameters chosen in this project and why?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-impl">Implementation</span>
+      <div class="math-box">N_FFT   = 512  →  frame length = 32 ms at 16 kHz
+HOP     = 128  →  hop length   =  8 ms  (75% overlap)
+Window  = Hann (periodic)
+F       = 257 bins  (0 to 8 kHz)</div>
+      <p><strong>Rationale:</strong></p>
+      <ul>
+        <li><strong>32 ms frame:</strong> Balances frequency resolution (31 Hz per bin) with temporal resolution. Speech phonemes last ~50–300 ms, so this captures short-time stationarity.</li>
+        <li><strong>75% overlap:</strong> Ensures smooth reconstruction via overlap-add, reduces STFT artefacts, and provides more training frames per utterance.</li>
+        <li><strong>Hann window:</strong> Good side-lobe suppression (−31 dB first side-lobe), enables perfect reconstruction with 75% overlap.</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q16. How do you handle variable-length sequences in the neural network training?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-impl">Implementation</span>
+      <p>We use two strategies:</p>
+      <ol>
+        <li><strong>Fixed-length cropping:</strong> During training, randomly crop all utterances to a fixed duration (4 seconds). This gives uniform batch sizes and allows standard batching.</li>
+        <li><strong>Zero-padding + collate_fn:</strong> Our custom <span class="inline-code">collate_fn</span> pads shorter sequences in a batch to the longest sequence length with zeros. The loss is computed over all frames (including padded ones, which contribute near-zero loss since the masked output is also near-zero).</li>
+      </ol>
+      <p>For inference on arbitrary-length signals, the NeuralEnhancer class processes the full signal without chunking (LSTM processes the entire sequence as one batch).</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q17. Why clip gradient norms during LSTM training?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-impl">Implementation</span>
+      <p>LSTMs are prone to <strong>exploding gradients</strong> when sequences are long and the loss gradient flows back through many time steps. The product of many Jacobian matrices can grow exponentially.</p>
+      <div class="math-box">if ||∇|| > threshold:
+    ∇ ← ∇ × (threshold / ||∇||)
+threshold = 5.0  in our project</div>
+      <p>Without clipping, a single "bad" batch can produce a gradient so large it catastrophically updates the weights. Gradient clipping maintains training stability while still allowing fast learning. Note: this is distinct from gradient <em>vanishing</em>, which LSTMs solve via gating.</p>
+    </div>
+  </details>
+
+  <!-- ── METRICS & RESULTS ── -->
+  <h3 style="margin-bottom:.6rem;margin-top:1.5rem">📊 Evaluation & Results</h3>
+
+  <details>
+    <summary>Q18. Why is PESQ a better metric than SNR for speech quality evaluation?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <p><strong>SNR limitations:</strong> SNR treats all frequency bins equally and all error types equally. A 10 dB improvement in high-frequency noise (less audible) looks the same as a 10 dB improvement in speech-frequency noise (very audible). SNR does not model auditory masking.</p>
+      <p><strong>PESQ advantages:</strong></p>
+      <ul>
+        <li>Uses a perceptual model of the human auditory system (equal-loudness curves, auditory masking)</li>
+        <li>Separately models additive distortion and time-frequency warping</li>
+        <li>Correlates well (r ≈ 0.93) with subjective MOS scores in ITU-T tests</li>
+        <li>Sensitive to speech distortion introduced by over-suppression (a common neural model failure mode)</li>
+      </ul>
+      <p>It is possible to increase SNR by over-suppressing the noise while heavily distorting speech — PESQ will penalise this correctly; SNR will not.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q19. Why do adaptive filters sometimes <em>hurt</em> performance at high SNR?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <p>At high SNR (>15 dB), the noise level is already low. Adaptive filters introduce:</p>
+      <ul>
+        <li><strong>Misadjustment noise:</strong> Random weight fluctuations add a noise floor proportional to μ.</li>
+        <li><strong>Speech cancellation:</strong> If the reference signal leaks speech, the adaptive filter partially cancels the desired signal. At high SNR, this speech distortion becomes perceptually dominant.</li>
+        <li><strong>Wiener overattenuation:</strong> When noise PSD is overestimated (a common error), the gain H is too small, distorting speech.</li>
+      </ul>
+      <p>This is why metrics should be evaluated across a range of input SNRs. The "best" method changes with SNR conditions.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q20. How would you extend this project to real-time/streaming operation?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-impl">Implementation</span>
+      <p><strong>Adaptive filters (LMS/NLMS/RLS):</strong> Already inherently causal and sample-by-sample. No changes needed. Run directly on audio stream.</p>
+      <p><strong>Wiener / Spectral Subtraction:</strong> Process one STFT frame at a time with a short hop (8–16 ms). Already near real-time.</p>
+      <p><strong>Neural models (BLSTM → LSTM):</strong></p>
+      <ul>
+        <li>Replace BiLSTM with unidirectional LSTM (removes future-frame dependency)</li>
+        <li>Process one frame (8 ms hop) at a time, passing hidden states forward</li>
+        <li>Typical latency: one or two frames (16–32 ms) for look-ahead buffer</li>
+        <li>ONNX export → TensorRT for real-time GPU inference; or quantisation for CPU</li>
+      </ul>
+      <p>Tools: PortAudio for audio I/O, ONNX Runtime for efficient inference, ring buffers for overlap-add reconstruction.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q21. What is the role of the STFT phase in speech reconstruction?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <p>All our methods enhance only the <strong>magnitude</strong> of the STFT and retain the <strong>noisy phase</strong>:</p>
+      <div class="math-box">Ŝ(k,l) = M(k,l) · |Y(k,l)| · e^{jφ_Y(k,l)}</div>
+      <p>This is called the <em>"noisy phase approximation."</em> It works surprisingly well because:</p>
+      <ul>
+        <li>The human auditory system is relatively insensitive to phase at high frequencies (&gt;2–3 kHz).</li>
+        <li>At low frequencies, if the magnitude is correct, the phase error mainly causes slight pitch shifts.</li>
+        <li>Phase estimation is extremely difficult (phase is wrapped and noisy).</li>
+      </ul>
+      <p><strong>Phase-aware methods</strong> (like complex IRM, deep complex networks) can give another 0.5–1 dB improvement but at significant complexity cost.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q22. What preprocessing steps are essential before training the neural model?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-impl">Implementation</span>
+      <ol>
+        <li><strong>Resampling to common rate (16 kHz):</strong> Ensures all features are in the same frequency range.</li>
+        <li><strong>Peak normalisation:</strong> Prevents clipping and ensures consistent input amplitude. We normalise each training clip to peak amplitude 1.0.</li>
+        <li><strong>Log-magnitude input:</strong> Speech magnitude spectra span a huge dynamic range (~60 dB). Log-magnitude compresses this to a more learnable range and matches the logarithmic loudness perception of the ear.</li>
+        <li><strong>Multi-condition training:</strong> Mix clean speech with multiple noise types at multiple SNRs (0, 5, 10, 15 dB). This makes the model robust to unseen conditions.</li>
+        <li><strong>Synchronised STFT:</strong> Clean and noisy signals must have identical STFT parameters so the mask target is computed correctly.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q23. How does the Ephraim–Malah decision-directed approach reduce musical noise?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <p>Musical noise arises from rapid frame-to-frame fluctuation in the Wiener gain. The decision-directed approach introduces <strong>temporal smoothing of the prior SNR estimate</strong>:</p>
+      <div class="math-box">ξ̂(k,l) = α · |Ŝ(k,l−1)|²/σ²_d(k,l)  +  (1−α) · max[γ(k,l)−1, 0]
+
+First term:  "decision" from previous enhanced frame (smooth)
+Second term: "data-driven" from current observation    (noisy)
+α ≈ 0.98:   heavily weight the smooth prior estimate</div>
+      <p>Because ξ̂ is mostly determined by the previous enhanced frame (which is itself smooth), the resulting Wiener gain H = ξ̂/(1+ξ̂) varies smoothly over time. Rapid gain fluctuations that cause musical noise are suppressed. The trade-off is a small amount of "hangover" — noise can persist briefly after the noise stops, but this is less objectionable than musical noise.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q24. Compare all 7 methods on: computational cost, SNR gain, noise types, and latency.</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-compare">Comparison</span>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>CPU Cost</th><th>Typical ΔSNR</th><th>Best noise type</th><th>Latency</th><th>Training needed</th></tr></thead>
+        <tbody>
+          <tr><td>LMS</td><td class="td-good">O(M)</td><td>4–7 dB</td><td>White, stationary</td><td class="td-good">&lt;1 ms</td><td class="td-good">No</td></tr>
+          <tr><td>NLMS</td><td class="td-good">O(M)</td><td>5–8 dB</td><td>Varying amplitude</td><td class="td-good">&lt;1 ms</td><td class="td-good">No</td></tr>
+          <tr><td>RLS</td><td class="td-mid">O(M²)</td><td>7–10 dB</td><td>Correlated noise</td><td class="td-good">&lt;2 ms</td><td class="td-good">No</td></tr>
+          <tr><td>Wiener</td><td class="td-good">O(N log N)</td><td>8–12 dB</td><td>Stationary, pink</td><td class="td-mid">1 frame (~8ms)</td><td class="td-good">No</td></tr>
+          <tr><td>Spec. Sub.</td><td class="td-good">O(N log N)</td><td>5–8 dB</td><td>Stationary</td><td class="td-mid">1 frame</td><td class="td-good">No</td></tr>
+          <tr><td>BLSTM</td><td class="td-bad">O(T·M·H)</td><td>10–15 dB</td><td>All types</td><td class="td-bad">Full seg.</td><td class="td-bad">Yes (GPU)</td></tr>
+          <tr><td>CRN</td><td class="td-bad">High</td><td>12–16 dB</td><td>All types</td><td class="td-bad">Full seg.</td><td class="td-bad">Yes (GPU)</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Q25. What are the limitations of this project and future improvements?</summary>
+    <div class="qa-body">
+      <span class="qa-tag tag-theory">Theory</span>
+      <p><strong>Current limitations:</strong></p>
+      <ul>
+        <li>Adaptive filters require a separate reference microphone (dual-microphone setup).</li>
+        <li>Neural models trained on synthetic noise may not generalise to all real-world noise types.</li>
+        <li>Phase is not enhanced (noisy phase approximation).</li>
+        <li>No reverberation handling (only additive noise addressed).</li>
+        <li>Single-channel only (no spatial processing).</li>
+      </ul>
+      <p><strong>Future improvements:</strong></p>
+      <ul>
+        <li><strong>Complex-domain neural networks</strong> (DCCRN, DPCRN) — handle both magnitude and phase.</li>
+        <li><strong>Diffusion model-based enhancement</strong> (SGMSE+, CDiffuSE) — state-of-the-art generative approach.</li>
+        <li><strong>Self-supervised pre-training</strong> (wav2vec 2.0 features) — reduce labelled data requirements.</li>
+        <li><strong>Beamforming + neural</strong> — combine spatial filtering (multi-mic) with neural post-processing.</li>
+        <li><strong>Real-time streaming</strong> — unidirectional LSTM + ONNX quantisation for edge deployment.</li>
+      </ul>
+    </div>
+  </details>
+
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ QUICKSTART -->
+<section id="quickstart">
+  <div class="section-header"><span class="sec-num">12</span><h2>Quick Start Guide</h2></div>
+
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-dot"></div>
+      <h4>Step 1 – Install dependencies</h4>
+      <pre><span class="nm">cd</span> speech_enhancement
+<span class="nm">pip</span> install <span class="op">-r</span> requirements.txt</pre>
+    </div>
+    <div class="tl-item"><div class="tl-dot"></div>
+      <h4>Step 2 – Generate / download dataset</h4>
+      <pre><span class="kw">python</span> data/download_dataset.py <span class="op">--</span>dataset synthetic <span class="op">--</span>n_clean 200
+<span class="cm"># Or try to download NOIZEUS (if URL is accessible):</span>
+<span class="kw">python</span> data/download_dataset.py <span class="op">--</span>dataset noizeus</pre>
+    </div>
+    <div class="tl-item"><div class="tl-dot"></div>
+      <h4>Step 3 – Run the demo (all methods)</h4>
+      <pre><span class="kw">python</span> main.py <span class="op">--</span>snr <span class="nb">5</span> <span class="op">--</span>noise white <span class="op">--</span>compare</pre>
+    </div>
+    <div class="tl-item"><div class="tl-dot"></div>
+      <h4>Step 4 – Train neural model (optional)</h4>
+      <pre><span class="kw">python</span> <span class="op">-m</span> src.neural.train <span class="op">--</span>model blstm <span class="op">--</span>epochs <span class="nb">50</span></pre>
+    </div>
+    <div class="tl-item"><div class="tl-dot"></div>
+      <h4>Step 5 – Enhance your own audio</h4>
+      <pre><span class="kw">python</span> main.py <span class="op">--</span>input path/to/noisy.wav <span class="op">--</span>compare</pre>
+    </div>
+  </div>
+
+  <h3>Project Structure</h3>
+  <div class="diagram">speech_enhancement/
+├── config.py                    # All hyperparameters & paths
+├── main.py                      # Demo pipeline (all 7 methods)
+├── requirements.txt
+├── data/
+│   └── download_dataset.py      # Dataset downloader & noise mixer
+├── src/
+│   ├── adaptive/
+│   │   ├── lms_filter.py        # LMS algorithm
+│   │   ├── nlms_filter.py       # NLMS algorithm
+│   │   ├── rls_filter.py        # RLS algorithm
+│   │   └── wiener_filter.py     # Wiener filter + Spectral Subtraction
+│   ├── neural/
+│   │   ├── model.py             # BLSTM + CRN architectures
+│   │   ├── train.py             # Training loop + Dataset class
+│   │   └── inference.py         # NeuralEnhancer wrapper
+│   ├── preprocessing/
+│   │   └── features.py          # STFT, Mel, MFCC, normalisation
+│   └── evaluation/
+│       └── metrics.py           # SNR, SSNR, PESQ, STOI, LSD
+├── audio_samples/
+│   ├── clean/                   # Clean reference audio
+│   ├── noisy/                   # Noisy input audio
+│   └── enhanced/                # All enhanced outputs
+└── results/
+    ├── checkpoints/             # Neural model checkpoints
+    ├── metrics_comparison.csv   # Quantitative results
+    └── comparison.png           # Waveform + spectrogram plot</div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ FOOTER -->
+<footer style="background:var(--bg2);border-top:1px solid var(--border);padding:2rem;text-align:center;color:var(--text2);font-size:13px;margin-top:3rem">
+  <p>Speech Signal Enhancement — Adaptive + Neural Methods</p>
+  <p style="margin-top:.4rem">Adaptive Signal Processing Course Project &nbsp;|&nbsp;
+    Key references: Widrow &amp; Hoff (1960) · Ephraim &amp; Malah (1984) · Boll (1979) · Tan &amp; Wang (2018)</p>
+  <p style="margin-top:.8rem;color:var(--accent)">Built with Python · PyTorch · SciPy · LibROSA · NumPy</p>
+</footer>
+
+<script>
+// Smooth scroll for nav links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const t = document.querySelector(a.getAttribute('href'));
+    if(t) t.scrollIntoView({behavior:'smooth'});
+  });
+});
+// Highlight active section on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('nav a[href^="#"]');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => {
+    if(window.scrollY >= s.offsetTop - 80) cur = s.id;
+  });
+  navLinks.forEach(a => {
+    a.style.color = a.getAttribute('href') === '#'+cur ? 'var(--accent)' : '';
+    a.style.background = a.getAttribute('href') === '#'+cur ? 'var(--bg3)' : '';
+  });
+});
+</script>
+</body>
+</html>

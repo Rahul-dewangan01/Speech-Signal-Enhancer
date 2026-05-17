@@ -1,0 +1,33 @@
+# Virtual environments
+myenv/
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Model checkpoints (large binary files)
+results/checkpoints/
+
+# Audio samples (generated / downloaded)
+audio_samples/clean/*.wav
+audio_samples/noisy/*.wav
+audio_samples/enhanced/*.wav
+
+# Downloaded datasets
+data/noizeus.zip
+data/noizeus/
+data/dev-clean/
+
+# OS
+Thumbs.db
+.DS_Store
